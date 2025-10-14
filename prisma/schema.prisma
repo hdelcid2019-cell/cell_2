@@ -1,0 +1,114 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String   @id @default(cuid())
+  email       String   @unique
+  displayName String
+  city        String?
+  role        Role     @default(MEMBER)
+  ageVerified Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  photos Photo[]
+
+  // Messaging relations (two directions)
+  messagesSent Message[] @relation("messagesSent")
+  messagesRecv Message[] @relation("messagesRecv")
+
+  // Likes relations (two directions)
+  likesSent Like[] @relation("likesSent")
+  likesRecv Like[] @relation("likesRecv")
+
+  // Blocks (two directions)
+  blocksSent Block[] @relation("blocksSent")
+  blocksRecv Block[] @relation("blocksRecv")
+
+  subscription Subscription?
+}
+
+model Photo {
+  id         String          @id @default(cuid())
+  userId     String
+  user       User            @relation(fields: [userId], references: [id])
+  url        String
+  nsfwFlag   Boolean         @default(false)
+  visibility PhotoVisibility @default(PUBLIC)
+  createdAt  DateTime        @default(now())
+
+  @@index([userId])
+}
+
+model Subscription {
+  id               String   @id @default(cuid())
+  userId           String   @unique
+  plan             String
+  status           String // active, past_due, canceled
+  currentPeriodEnd DateTime
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model Like {
+  id String @id @default(cuid())
+
+  fromId String
+  from   User   @relation("likesSent", fields: [fromId], references: [id])
+
+  toId String
+  to   User   @relation("likesRecv", fields: [toId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@unique([fromId, toId]) // prevent duplicate likes
+  @@index([fromId])
+  @@index([toId])
+}
+
+model Message {
+  id String @id @default(cuid())
+
+  fromId String
+  from   User   @relation("messagesSent", fields: [fromId], references: [id])
+
+  toId String
+  to   User   @relation("messagesRecv", fields: [toId], references: [id])
+
+  body      String
+  createdAt DateTime @default(now())
+
+  @@index([fromId])
+  @@index([toId])
+}
+
+model Block {
+  id String @id @default(cuid())
+
+  blockerId String
+  blocker   User   @relation("blocksSent", fields: [blockerId], references: [id])
+
+  blockedId String
+  blocked   User   @relation("blocksRecv", fields: [blockedId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@unique([blockerId, blockedId]) // prevent duplicate blocks
+  @@index([blockerId])
+  @@index([blockedId])
+}
+
+enum Role {
+  MEMBER
+  ADMIN
+}
+
+enum PhotoVisibility {
+  PUBLIC
+  SUBSCRIBERS_ONLY
+}

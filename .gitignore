@@ -1,0 +1,13 @@
+# dependencies & builds
+node_modules/
+.next/
+out/
+dist/
+
+# env & local db
+.env
+dev.db
+
+# logs & misc
+*.log
+.DS_Store
