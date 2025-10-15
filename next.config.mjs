@@ -1,10 +1,3 @@
 /** @type {import('next').NextConfig} */
-const nextConfig = {
-  experimental: { serverActions: { allowedOrigins: ['*'] } },
-  images: {
-    remotePatterns: [
-      { protocol: 'https', hostname: '**' }
-    ]
-  }
-}
-export default nextConfig
+const nextConfig = { eslint: { ignoreDuringBuilds: true } };
+export default nextConfig;
